@@ -29,10 +29,7 @@ class MainScreen extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       body: Center(
-        child: BreathingFlower(
-          inhaleDuration: Duration(seconds: 4),
-          exhaleDuration: Duration(seconds: 4),
-        ),
+        child: BreathingFlower(),
       ),
     );
   }

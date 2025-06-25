@@ -1,60 +1,51 @@
-import 'dart:async';
-
 import 'package:flutter/material.dart';
-import 'package:flutter_svg/svg.dart';
+import 'package:lottie/lottie.dart';
+import 'dart:async';
 
 class BreathingFlower extends StatefulWidget {
   final Duration inhaleDuration;
   final Duration exhaleDuration;
 
   const BreathingFlower({
-    required this.exhaleDuration,
-    required this.inhaleDuration,
-    super.key
+    super.key,
+    this.inhaleDuration = const Duration(seconds: 6),
+    this.exhaleDuration = const Duration(seconds: 6),
   });
 
   @override
   State<BreathingFlower> createState() => _BreathingFlowerState();
 }
 
-class _BreathingFlowerState extends State<BreathingFlower> with SingleTickerProviderStateMixin{
-  late AnimationController _controller;
-  late Animation<double> _animation;
-  Timer? _cycleTimer;
-  Timer? _secondTicker;
+class _BreathingFlowerState extends State<BreathingFlower> with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+  late Timer _cycleTimer;
+  late Timer _secondTicker;
 
   bool isInhaling = true;
   int secondsRemaining = 0;
 
   @override
   void initState() {
-    // TODO: implement initState
-    _controller = AnimationController(
-        vsync: this,
-      duration: widget.inhaleDuration,
-    );
-
-    _animation =  Tween<double>(begin: 0.85, end: 1.15).animate(
-      CurvedAnimation(parent: _controller, curve: Curves.easeInOut)
-    );
-
-    secondsRemaining = widget.inhaleDuration.inSeconds;
-    _startSecondTicker();
-    _startBreathingLoop();
-
     super.initState();
+
+    _controller = AnimationController(vsync: this, duration: widget.inhaleDuration);
+    secondsRemaining = widget.inhaleDuration.inSeconds;
+
+    _startBreathingLoop();
+    _startSecondTicker();
   }
 
-  void _startBreathingLoop(){
-      _controller.forward();
-      _cycleTimer = Timer.periodic(widget.inhaleDuration + widget.exhaleDuration, (timer){
+  void _startBreathingLoop() {
+    _controller.forward(from: 0);
+
+    _cycleTimer = Timer.periodic(
+      widget.inhaleDuration + widget.exhaleDuration,
+          (_) {
         _breatheIn();
-        Future.delayed(widget.inhaleDuration, (){
-            _breatheOut();
-        });
-      });
+        Future.delayed(widget.inhaleDuration, () => _breatheOut());
+      },
+    );
   }
-
 
   void _breatheIn() {
     setState(() {
@@ -75,7 +66,7 @@ class _BreathingFlowerState extends State<BreathingFlower> with SingleTickerProv
   }
 
   void _startSecondTicker() {
-    _secondTicker = Timer.periodic(Duration(seconds: 1), (_) {
+    _secondTicker = Timer.periodic(const Duration(seconds: 1), (_) {
       if (secondsRemaining > 0) {
         setState(() {
           secondsRemaining--;
@@ -87,8 +78,8 @@ class _BreathingFlowerState extends State<BreathingFlower> with SingleTickerProv
   @override
   void dispose() {
     _controller.dispose();
-    _cycleTimer?.cancel();
-    _secondTicker?.cancel();
+    _cycleTimer.cancel();
+    _secondTicker.cancel();
     super.dispose();
   }
 
@@ -97,15 +88,14 @@ class _BreathingFlowerState extends State<BreathingFlower> with SingleTickerProv
     return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        AnimatedBuilder(
-          animation: _animation,
-          builder: (context, child) {
-            return Transform.scale(
-              scale: _animation.value,
-              child: child,
-            );
+        Lottie.asset(
+          'assets/animation.json',
+          controller: _controller,
+          height: 300,
+          repeat: false,
+          onLoaded: (composition) {
+            _controller.duration = isInhaling ? widget.inhaleDuration : widget.exhaleDuration;
           },
-          child: SvgPicture.asset('assets/flower.svg', width: 250),
         ),
         const SizedBox(height: 24),
         Text(
